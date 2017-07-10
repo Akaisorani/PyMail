@@ -174,6 +174,9 @@ def get_texts(msg):
 			ret+=[content]
 	return ret
 
+def get_from_add(msg):
+	return parseaddr(msg.get("From"))[1]
+
 def _decode_str(s):
 	value,charset=decode_header(s)[0]
 	if charset:
