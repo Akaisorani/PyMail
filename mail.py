@@ -14,7 +14,7 @@ from email.utils import parseaddr,parsedate
 """
 functions:
 send_mail(to_list,subject,text=None,image=None,attachment=None)	return bool
-receive_mail(Subject=None,From=None)	return msg(object)
+receive_mail(Subject=None,From=None,Timeperiod=None)	return msg(object)
 print_info(msg,indent=0)	return None
 get_texts(msg)	return text(str)
 
@@ -28,11 +28,11 @@ mail_from="Akaisora<%s>"%mail_user
 """
 
 
-smtp_host=#"smtp.126.com"
-pop_host=#"pop.126.com"
-mail_user=
-mail_pass=
-mail_from="Akaisora<%s>"%mail_user
+# smtp_host=#"smtp.126.com"
+# pop_host=#"pop.126.com"
+# mail_user=
+# mail_pass=
+# mail_from="Akaisora<%s>"%mail_user
 
 
 def send_mail(to_list,subject,text=None,image=None,attachment=None):
@@ -97,14 +97,13 @@ def receive_mail(Subject=None,From=None,Timeperiod=None):
 		
 		mail_amount=len(mails)
 		msg=None
-		datepoint=datetime.datetime.now()-datetime.timedelta(seconds=Timeperiod)
+		if Timeperiod:datepoint=datetime.datetime.now()-datetime.timedelta(seconds=Timeperiod)
 		for index in range(mail_amount,0,-1):
 			resp,lines,octets=server.top(index,0)	
 			msg_content=b'\r\n'.join(lines).decode('utf-8')
 			msg=Parser().parsestr(msg_content)
 			
-			msgdate=datetime.datetime(*parsedate(msg.get("Date"))[:6])
-			if msgdate<datepoint:break
+			if Timeperiod and datetime.datetime(*parsedate(msg.get("Date"))[:6])<datepoint:break
 			
 			msgFrom=_decode_str(parseaddr(msg.get("From"))[0])+"<%s>"%parseaddr(msg.get("From"))[1]
 			msgSubject=_decode_str(msg.get("Subject"))
