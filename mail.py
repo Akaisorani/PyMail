@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import os
+import os,datetime
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -9,7 +9,7 @@ from email.mime.image import MIMEImage
 import poplib
 from email.parser import Parser
 from email.header import decode_header
-from email.utils import parseaddr
+from email.utils import parseaddr,parsedate
 
 """
 functions:
@@ -20,7 +20,7 @@ get_texts(msg)	return text(str)
 
 
 please complete your mail info in this code
-mail_host=#"smtp.126.com"
+smtp_host=#"smtp.126.com"
 pop_host=#"pop.126.com"
 mail_user=
 mail_pass=
@@ -28,7 +28,7 @@ mail_from="Akaisora<%s>"%mail_user
 """
 
 
-mail_host=#"smtp.126.com"
+smtp_host=#"smtp.126.com"
 pop_host=#"pop.126.com"
 mail_user=
 mail_pass=
@@ -82,25 +82,29 @@ def send_mail(to_list,subject,text=None,image=None,attachment=None):
 		print(e)
 		return False
 
-def receive_mail(Subject=None,From=None):
+def receive_mail(Subject=None,From=None,Timeperiod=None):
 	"""Subject,Form is used to filter mails, when find more than one mail, it will choose the latest"""
 	try:
 		server=poplib.POP3_SSL(pop_host,995)
-		print(server.getwelcome().decode('utf-8'))
+		# print(server.getwelcome().decode('utf-8'))
 		server.user(mail_user)
 		server.pass_(mail_pass)
 		
 		print("message: %s. Size: %s"%server.stat())
 		
 		resp,mails,octets=server.list()
-		print(mails)
+		# print(mails)
 		
 		mail_amount=len(mails)
 		msg=None
+		datepoint=datetime.datetime.now()-datetime.timedelta(seconds=Timeperiod)
 		for index in range(mail_amount,0,-1):
 			resp,lines,octets=server.top(index,0)	
 			msg_content=b'\r\n'.join(lines).decode('utf-8')
 			msg=Parser().parsestr(msg_content)
+			
+			msgdate=datetime.datetime(*parsedate(msg.get("Date"))[:6])
+			if msgdate<datepoint:break
 			
 			msgFrom=_decode_str(parseaddr(msg.get("From"))[0])+"<%s>"%parseaddr(msg.get("From"))[1]
 			msgSubject=_decode_str(msg.get("Subject"))
@@ -118,6 +122,7 @@ def receive_mail(Subject=None,From=None):
 		
 		return msg
 	except Exception as e:
+		print(e)
 		return None
 	
 def print_info(msg,indent=0):
@@ -159,7 +164,7 @@ def get_texts(msg):
 	if(msg.is_multipart()):
 		parts=msg.get_payload()
 		for part in parts:
-			ret+=get_text(part)
+			ret+=get_texts(part)
 	else:
 		content_type=msg.get_content_type()
 		if content_type in {'text/plain','text/html'}:
@@ -181,9 +186,8 @@ def _guess_charset(msg):
 	if charset is None:
 		content_type=msg.get('Content-Type','').lower()
 		pos=content_type.find('charset=')
-		pos2=content_type[pos+8:].find(';')
 		if pos>=0:
-			charset=content_type[pos+8:pos+8+pos2].strip()
+			charset=content_type[pos+8:].strip().split()[0].strip().strip(';\'"')
 	return charset
 
 
@@ -191,7 +195,7 @@ def _guess_charset(msg):
 	
 if __name__=="__main__":
 	test_to_list=mail_user
-	if send_mail(test_to_list,"测试邮件","Lucky! It is working!"):
+	if send_mail(test_to_list,"测试邮件","Welcome to <a href='http://akaisora.tech'>Akaisora's blog</a>","test.png","fuck.txt"):
 		print("发送成功")
 	else:
 		print("发送失败")	
