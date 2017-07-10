@@ -191,7 +191,7 @@ def _guess_charset(msg):
 	
 if __name__=="__main__":
 	test_to_list=mail_user
-	if send_mail(test_to_list,"测试邮件","Welcome to <a href='http://akaisora.tech'>Akaisora's blog</a>","test.png","fuck.txt"):
+	if send_mail(test_to_list,"测试邮件","Lucky! It is working!"):
 		print("发送成功")
 	else:
 		print("发送失败")	
